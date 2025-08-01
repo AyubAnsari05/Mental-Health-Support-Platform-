@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Mental Health Support Platform</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="main">
+        <div class="head">
+            <span style="float: left;">
+                <img src="../images/Copilot_20250801_123535.png" alt="logo" width="8%" height="auto" style="float: left;">
+                <ul>
+                    <li><span class="logo-text">Mental Health</span></li>
+                </ul>
+            </span>
+            <span style="float: right;">
+                <ul style="font-weight: bold;">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/login">Login</a></li>
+                </ul>
+            </span>  
+        </div>
+
+        <div class="matter">
+            <div class="form-wrapper">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #2d3748;">Create Your Account</h2>
+                
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password</label>
+                        <input type="password" id="confirm-password" name="confirm-password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role" required>
+                            <option value="">Select your role</option>
+                            <option value="student">Student</option>
+                            <option value="counsellor">Counsellor</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="firstName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="lastName">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="department">Department (for students)</label>
+                        <input type="text" id="department" name="department">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="year">Year (for students)</label>
+                        <input type="number" id="year" name="year" min="1" max="5">
+                    </div>
+                    
+                    <button type="submit" class="btn primary">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <p>Already have an account? <a href="/login" style="color: #667eea;">Login here</a></p>
+                </div>
+                
+                <div id="error-message" style="display: none; color: #e53e3e; text-align: center; margin-top: 15px;"></div>
+                <div id="success-message" style="display: none; color: #48bb78; text-align: center; margin-top: 15px;"></div>
+            </div>
+        </div>
+
+        <div class="foot">
+            <p>&copy; 2025 Ayub Ansari. All rights reserved.</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('signup-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const role = document.getElementById('role').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const department = document.getElementById('department').value;
+            const year = document.getElementById('year').value;
+            
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+            
+            // Clear previous messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Validate password match
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Passwords do not match';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            // Validate password length
+            if (password.length < 6) {
+                errorMessage.textContent = 'Password must be at least 6 characters long';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            submitBtn.disabled = true;
+            
+            // Prepare profile data
+            const profile = {};
+            if (firstName) profile.firstName = firstName;
+            if (lastName) profile.lastName = lastName;
+            if (department) profile.department = department;
+            if (year) profile.year = parseInt(year);
+            
+            fetch('/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password,
+                    role: role,
+                    profile: profile
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    // Store token and user data
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    successMessage.textContent = 'Account created successfully! Redirecting to dashboard...';
+                    successMessage.style.display = 'block';
+                    
+                    // Redirect to dashboard after a short delay
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
+                } else {
+                    throw new Error(data.error || 'Registration failed');
+                }
+            })
+            .catch(error => {
+                console.error('Registration error:', error);
+                errorMessage.textContent = error.message || 'Registration failed. Please try again.';
+                errorMessage.style.display = 'block';
+                
+                // Reset button
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        });
+        
+        // Show/hide department and year fields based on role
+        document.getElementById('role').addEventListener('change', function() {
+            const role = this.value;
+            const departmentField = document.getElementById('department').parentElement;
+            const yearField = document.getElementById('year').parentElement;
+            
+            if (role === 'student') {
+                departmentField.style.display = 'block';
+                yearField.style.display = 'block';
+            } else {
+                departmentField.style.display = 'none';
+                yearField.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
